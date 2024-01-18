@@ -1,0 +1,4 @@
+﻿CREATE TABLE [dbo].[Stock]
+(
+	[Id] INT NOT NULL PRIMARY KEY
+)
