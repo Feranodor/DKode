@@ -24,7 +24,7 @@ async function execute(v) {
         case 'EUR':
         case 'USD':
             const rate = await getRate(v);
-            text.value = tryEvaluate(text.value + '*' + rate);
+            text.value = tryEvaluate(`(${text.value})*${rate}`);
             break;
         default:
             text.value += v;
