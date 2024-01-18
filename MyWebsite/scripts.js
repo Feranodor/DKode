@@ -6,6 +6,7 @@ const buttons = document.querySelectorAll('input[type="button"]');
 buttons.forEach(x => x.onclick = () => execute(x.value));
 
 const incorrect = 'incorrect expression';
+const ratesCache = new Object();
 
 async function execute(v) {
     if (text.value === incorrect) {
@@ -22,9 +23,7 @@ async function execute(v) {
         case 'GBP':
         case 'EUR':
         case 'USD':
-            const response = await fetch(`http://api.nbp.pl/api/exchangerates/rates/a/${v}/2023-12-22/?format=json`);
-            const json = await response.json();
-            const rate = json.rates[0].mid;
+            const rate = await getRate(v);
             text.value = tryEvaluate(text.value + '*' + rate);
             break;
         default:
@@ -40,4 +39,15 @@ function tryEvaluate(expession) {
         result = incorrect;
     }
     return result;
+}
+
+async function getRate(currency) {
+    if (currency in ratesCache) {
+        return ratesCache[currency];
+    }
+    const response = await fetch(`http://api.nbp.pl/api/exchangerates/rates/a/${currency}/2023-12-22/?format=json`);
+    const json = await response.json();
+    const rate = json.rates[0].mid;
+    ratesCache[currency] = rate;
+    return rate;
 }
