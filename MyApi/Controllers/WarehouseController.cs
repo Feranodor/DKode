@@ -53,7 +53,7 @@ namespace MyApi.Controllers
 
                 if (isEmpty is true)
                 {
-                    var goodProducts = GetData<Product>(".\\Products.csv", ";",true, p =>
+                    var goodProducts = GetData<Product>(".\\Products.csv", ";", true, p =>
                     {
                         var value = Regex.Match(p.shipping, "(\\d\\d)h").Groups[1].Value;
                         bool success = int.TryParse(value, out int number);
@@ -73,13 +73,13 @@ namespace MyApi.Controllers
 
                 if (isEmpty is true)
                 {
-                    var goodInventory = GetData<Inventory>(".\\Inventory.csv", ",",true, p =>
+                    var goodInventory = GetData<Inventory>(".\\Inventory.csv", ",", true, p =>
                     {
                         var value = Regex.Match(p.shipping, "(\\d\\d)h").Groups[1].Value;
                         bool success = int.TryParse(value, out int number);
                         return success && number <= 24;
                     });
-                    //nie wszystko trzeba do bazy cos do wyjebania bedzie
+                    //zostawic id,sku,unit,qty,shippingcost
                     await connection.ExecuteAsync(
                         @"INSERT INTO [Stock] (Id, Sku, Unit, Qty, Manufacturer_name, Manufacturer_ref_num, Shipping, Shipping_cost)
                              VALUES (@product_id, @sku, @unit, @qty, @manufacturer_name, @manufacturer_ref_num, @shipping, @shipping_cost)",
@@ -93,8 +93,8 @@ namespace MyApi.Controllers
 
                 if (isEmpty is true)
                 {
-                    var goodInventory = GetData<Prices>(".\\Prices.csv", ",",false, p => true);
-                    //nie wszystko trzeba do bazy cos do wyjebania bedzie
+                    var goodInventory = GetData<Prices>(".\\Prices.csv", ",", false, p => true);
+                    //zostawic id,sku,price
                     await connection.ExecuteAsync(
                         @"INSERT INTO [Prices] (Id, Sku, Price, DiscountPrice, VatRate, LogisticUnitPrice)
                                        VALUES (@ID, @SKU, @price, @discountPrice, @vatRate, @logisticUnitPrice)",
@@ -106,13 +106,13 @@ namespace MyApi.Controllers
             return Ok();
         }
 
-        private List<T> GetData<T>(string fileCachePath, string delimeter,bool hasHeaderRecord, Predicate<T> isRequired)
+        private List<T> GetData<T>(string fileCachePath, string delimeter, bool hasHeaderRecord, Predicate<T> isRequired)
         {
             using var reader = new StreamReader(fileCachePath);
             var bad = new List<string>();
             var isRecordBad = false;
             using var csv = new CsvReader(reader, new CsvConfiguration(new CultureInfo("de-DE"))
-            {     
+            {
                 HasHeaderRecord = hasHeaderRecord,
                 Delimiter = delimeter,
                 BadDataFound = context =>
@@ -160,9 +160,32 @@ namespace MyApi.Controllers
 
 
         [HttpGet("secondStep")]
-        public IActionResult Get(string sku)
+        public async Task<IActionResult> Get(string sku)
         {
-            return Ok();
+            var sql = @"  SELECT
+       p.[Name]--a. Product Name
+      ,p.[EAN]--b. EAN
+      ,p.[Producer_name] --c. Supplier name 
+      ,p.[Category]--d. Category
+      ,p.[Default_image]--e. Image URL
+	   ,s.[Unit]--g. Logistic unit
+      ,s.[Qty]--f. Stock level
+      ,s.[Shipping_cost]--i. Despatch cost
+      ,c.[Price]--h. Net cost
+  FROM [Products] as p 
+  INNER JOIN [Stock] as s on p.sku=s.sku
+  INNER JOIN [Prices] as c on p.sku=c.sku
+  where p.Sku = @SKU";//1131-214YY-FF003
+
+            using var connection = new SqlConnection("Server=127.0.0.1,1433;Database=DatabaseQWERTY;user id=sa;password=Dduppaa!;TrustServerCertificate=True;");
+
+            var aaa = await connection.QueryAsync<Dtos.Product>(sql, new { SKU = sku }).ConfigureAwait(false);
+            if (aaa is not null && aaa.Any())
+            {
+                return Ok(aaa.First());
+            }
+
+            return NotFound();
         }
     }
 
