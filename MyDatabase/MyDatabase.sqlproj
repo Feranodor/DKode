@@ -64,5 +64,14 @@
     <Build Include="Tables\Products.sql" />
     <Build Include="Tables\Stock.sql" />
     <Build Include="Tables\Prices.sql" />
+    <Build Include="Stored Procedures\GetProduct.sql" />
+    <Build Include="Stored Procedures\IsProductsTableEmpty.sql" />
+    <Build Include="Stored Procedures\IsStockTableEmpty.sql" />
+    <Build Include="Stored Procedures\IsPricesTableEmpty.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
 </Project>

@@ -55,7 +55,7 @@ namespace MyApi.Controllers
 
             using (var connection = _context.CreateConnection())
             {
-                bool? isEmpty = (bool?)connection.ExecuteScalar("SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM [Products]) THEN 0 ELSE 1 END AS BIT)");
+                bool? isEmpty = (bool?)connection.ExecuteScalar("IsProductsTableEmpty");
 
                 if (isEmpty is true)
                 {
@@ -75,7 +75,7 @@ namespace MyApi.Controllers
 
             using (var connection = _context.CreateConnection())
             {
-                bool? isEmpty = (bool?)connection.ExecuteScalar("SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM [Stock]) THEN 0 ELSE 1 END AS BIT)");
+                bool? isEmpty = (bool?)connection.ExecuteScalar("IsStockTableEmpty");
 
                 if (isEmpty is true)
                 {
@@ -85,7 +85,6 @@ namespace MyApi.Controllers
                         bool success = int.TryParse(value, out int number);
                         return success && number <= 24;
                     });
-                    //zostawic id,sku,unit,qty,shippingcost
                     await connection.ExecuteAsync(
                         @"INSERT INTO [Stock] (Id, Sku, Unit, Qty, Shipping_cost)
                              VALUES (@product_id, @sku, @unit, @qty, @shipping_cost)",
@@ -95,12 +94,11 @@ namespace MyApi.Controllers
 
             using (var connection = _context.CreateConnection())
             {
-                bool? isEmpty = (bool?)connection.ExecuteScalar("SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM [Prices]) THEN 0 ELSE 1 END AS BIT)");
+                bool? isEmpty = (bool?)connection.ExecuteScalar("IsPricesTableEmpty");
 
                 if (isEmpty is true)
                 {
                     var goodInventory = GetData<Prices>(".\\Prices.csv", ",", false, p => true);
-                    //zostawic id,sku,price
                     await connection.ExecuteAsync(
                         @"INSERT INTO [Prices] (Id, Sku, Price)
                                        VALUES (@ID, @SKU, @price)",
@@ -168,28 +166,14 @@ namespace MyApi.Controllers
         [HttpGet("secondStep")]
         public async Task<IActionResult> Get(string sku)
         {
-            var sql = @"SELECT
-       p.[Name]--a. Product Name
-      ,p.[EAN]--b. EAN
-      ,p.[Producer_name] --c. Supplier name 
-      ,p.[Category]--d. Category
-      ,p.[Default_image]--e. Image URL
-	   ,s.[Unit]--g. Logistic unit
-      ,s.[Qty]--f. Stock level
-      ,s.[Shipping_cost]--i. Despatch cost
-      ,c.[Price]--h. Net cost
-  FROM [Products] as p 
-  INNER JOIN [Stock] as s on p.sku=s.sku
-  INNER JOIN [Prices] as c on p.sku=c.sku
-  where p.Sku = @SKU";//1131-214YY-FF003
-
             using var connection = _context.CreateConnection();
+            
+            //1131-214YY-FF003
+            var result = await connection.QueryAsync<Dtos.Product>("GetProduct", new { SKU = sku }).ConfigureAwait(false);
 
-            var aaa = await connection.QueryAsync<Dtos.Product>(sql, new { SKU = sku }).ConfigureAwait(false);
-
-            if (aaa is not null && aaa.Any())
+            if (result is not null && result.Any())
             {
-                return Ok(aaa.First());
+                return Ok(result.First());
             }
 
             return NotFound();
