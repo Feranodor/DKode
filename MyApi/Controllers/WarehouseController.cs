@@ -65,10 +65,7 @@ namespace MyApi.Controllers
                         bool success = int.TryParse(value, out int number);
                         return p.is_wire is false && success && number <= 24;
                     });
-                    await connection.ExecuteAsync(
-                        @"INSERT INTO [Products] (Id, Sku, Name, EAN, Producer_name, Category, Is_wire, Shipping, Available, Is_vendor, Default_image)
-                                    VALUES (@ID, @SKU, @name, @EAN, @producer_name, @category, @is_wire, @shipping, @available, @is_vendor, @default_image)",
-                        goodProducts).ConfigureAwait(false);
+                    await connection.ExecuteAsync("InsertProduct", goodProducts).ConfigureAwait(false);
                 }
             }
 
@@ -85,10 +82,7 @@ namespace MyApi.Controllers
                         bool success = int.TryParse(value, out int number);
                         return success && number <= 24;
                     });
-                    await connection.ExecuteAsync(
-                        @"INSERT INTO [Stock] (Id, Sku, Unit, Qty, Shipping_cost)
-                             VALUES (@product_id, @sku, @unit, @qty, @shipping_cost)",
-                        goodInventory).ConfigureAwait(false);
+                    await connection.ExecuteAsync("InsertStock", goodInventory).ConfigureAwait(false);
                 }
             }
 
@@ -98,11 +92,8 @@ namespace MyApi.Controllers
 
                 if (isEmpty is true)
                 {
-                    var goodInventory = GetData<Prices>(".\\Prices.csv", ",", false, p => true);
-                    await connection.ExecuteAsync(
-                        @"INSERT INTO [Prices] (Id, Sku, Price)
-                                       VALUES (@ID, @SKU, @price)",
-                        goodInventory).ConfigureAwait(false);
+                    var goodPrices = GetData<Prices>(".\\Prices.csv", ",", false, p => true);
+                    await connection.ExecuteAsync("InsertPrice", goodPrices).ConfigureAwait(false);
                 }
             }
 
@@ -167,7 +158,7 @@ namespace MyApi.Controllers
         public async Task<IActionResult> Get(string sku)
         {
             using var connection = _context.CreateConnection();
-            
+
             //1131-214YY-FF003
             var result = await connection.QueryAsync<Dtos.Product>("GetProduct", new { SKU = sku }).ConfigureAwait(false);
 

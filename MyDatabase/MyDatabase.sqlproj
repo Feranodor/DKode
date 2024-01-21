@@ -68,6 +68,9 @@
     <Build Include="Stored Procedures\IsProductsTableEmpty.sql" />
     <Build Include="Stored Procedures\IsStockTableEmpty.sql" />
     <Build Include="Stored Procedures\IsPricesTableEmpty.sql" />
+    <Build Include="Stored Procedures\InsertProduct.sql" />
+    <Build Include="Stored Procedures\InsertStock.sql" />
+    <Build Include="Stored Procedures\InsertPrice.sql" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
