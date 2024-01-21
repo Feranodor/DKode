@@ -87,8 +87,8 @@ namespace MyApi.Controllers
                     });
                     //zostawic id,sku,unit,qty,shippingcost
                     await connection.ExecuteAsync(
-                        @"INSERT INTO [Stock] (Id, Sku, Unit, Qty, Manufacturer_name, Manufacturer_ref_num, Shipping, Shipping_cost)
-                             VALUES (@product_id, @sku, @unit, @qty, @manufacturer_name, @manufacturer_ref_num, @shipping, @shipping_cost)",
+                        @"INSERT INTO [Stock] (Id, Sku, Unit, Qty, Shipping_cost)
+                             VALUES (@product_id, @sku, @unit, @qty, @shipping_cost)",
                         goodInventory).ConfigureAwait(false);
                 }
             }
@@ -102,8 +102,8 @@ namespace MyApi.Controllers
                     var goodInventory = GetData<Prices>(".\\Prices.csv", ",", false, p => true);
                     //zostawic id,sku,price
                     await connection.ExecuteAsync(
-                        @"INSERT INTO [Prices] (Id, Sku, Price, DiscountPrice, VatRate, LogisticUnitPrice)
-                                       VALUES (@ID, @SKU, @price, @discountPrice, @vatRate, @logisticUnitPrice)",
+                        @"INSERT INTO [Prices] (Id, Sku, Price)
+                                       VALUES (@ID, @SKU, @price)",
                         goodInventory).ConfigureAwait(false);
                 }
             }
@@ -168,7 +168,7 @@ namespace MyApi.Controllers
         [HttpGet("secondStep")]
         public async Task<IActionResult> Get(string sku)
         {
-            var sql = @"  SELECT
+            var sql = @"SELECT
        p.[Name]--a. Product Name
       ,p.[EAN]--b. EAN
       ,p.[Producer_name] --c. Supplier name 
@@ -186,6 +186,7 @@ namespace MyApi.Controllers
             using var connection = _context.CreateConnection();
 
             var aaa = await connection.QueryAsync<Dtos.Product>(sql, new { SKU = sku }).ConfigureAwait(false);
+
             if (aaa is not null && aaa.Any())
             {
                 return Ok(aaa.First());

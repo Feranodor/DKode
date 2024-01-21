@@ -3,9 +3,6 @@
 	[Id] varchar(255) NOT NULL PRIMARY KEY,
 	[Sku] varchar(255),
 	[Price] money,
-	[DiscountPrice] money,
-	[VatRate] money,
-	[LogisticUnitPrice] money,
 )
 
 
