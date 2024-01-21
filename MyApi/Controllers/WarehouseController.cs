@@ -28,6 +28,12 @@ namespace MyApi.Controllers
             ("https://rekturacjazadanie.blob.core.windows.net/zadanie/Prices.csv", ".\\Prices.csv")
         };
 
+        private readonly IDapperContext _context;
+
+        public WarehouseController(IDapperContext context)
+        {
+            _context = context;
+        }
 
         [HttpGet("firstStep")]
         public async Task<IActionResult> Get()
@@ -47,7 +53,7 @@ namespace MyApi.Controllers
 
 
 
-            using (var connection = new SqlConnection("Server=127.0.0.1,1433;Database=DatabaseQWERTY;user id=sa;password=Dduppaa!;TrustServerCertificate=True;"))
+            using (var connection = _context.CreateConnection())
             {
                 bool? isEmpty = (bool?)connection.ExecuteScalar("SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM [Products]) THEN 0 ELSE 1 END AS BIT)");
 
@@ -67,7 +73,7 @@ namespace MyApi.Controllers
             }
 
 
-            using (var connection = new SqlConnection("Server=127.0.0.1,1433;Database=DatabaseQWERTY;user id=sa;password=Dduppaa!;TrustServerCertificate=True;"))
+            using (var connection = _context.CreateConnection())
             {
                 bool? isEmpty = (bool?)connection.ExecuteScalar("SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM [Stock]) THEN 0 ELSE 1 END AS BIT)");
 
@@ -87,7 +93,7 @@ namespace MyApi.Controllers
                 }
             }
 
-            using (var connection = new SqlConnection("Server=127.0.0.1,1433;Database=DatabaseQWERTY;user id=sa;password=Dduppaa!;TrustServerCertificate=True;"))
+            using (var connection = _context.CreateConnection())
             {
                 bool? isEmpty = (bool?)connection.ExecuteScalar("SELECT CAST(CASE WHEN EXISTS(SELECT 1 FROM [Prices]) THEN 0 ELSE 1 END AS BIT)");
 
@@ -177,7 +183,7 @@ namespace MyApi.Controllers
   INNER JOIN [Prices] as c on p.sku=c.sku
   where p.Sku = @SKU";//1131-214YY-FF003
 
-            using var connection = new SqlConnection("Server=127.0.0.1,1433;Database=DatabaseQWERTY;user id=sa;password=Dduppaa!;TrustServerCertificate=True;");
+            using var connection = _context.CreateConnection();
 
             var aaa = await connection.QueryAsync<Dtos.Product>(sql, new { SKU = sku }).ConfigureAwait(false);
             if (aaa is not null && aaa.Any())
